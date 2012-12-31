@@ -1,18 +1,9 @@
-var net  = process.title === 'browser' ? null : (require)('net')
+var net  = process.title === 'browser' ? require('tab-stream') : (require)('net')
 var EventEmitter = require('events').EventEmitter
 
 module.exports = inject(net)
 
 function inject (net) {
-
-  /*function delay(fun) {
-    return function () {
-      var args = [].slice.call(arguments)
-      setTimeout(function () {
-         fun.apply(null, args)
-      }, 50)
-    }
-  }*/
 
   function autonode (handler) {
 
@@ -21,7 +12,8 @@ function inject (net) {
     emitter.listen = 
       function listen (port) {
         //try and start a server on port.
-        console.log('PORT:', port || _port)
+        emitter.isServer = true
+        emitter.isClient = false
         server = net.createServer(onConnect).listen(port || _port)
         server.once('error', function (err) {
           //someone else has already started server.
@@ -36,9 +28,9 @@ function inject (net) {
             }
             client = net.connect(port || _port)
               .once('connect', onConnect)
-              .once('error', reconnect)
-              .once('end',   reconnect)
-              .once('close', reconnect)
+              .once('error',   reconnect)
+              .once('end',     reconnect)
+              .once('close',   reconnect)
           }
         })
         server.once('listening', function () {
@@ -50,6 +42,8 @@ function inject (net) {
       }
 
     function onConnect (stream) {
+      emitter.isServer = false
+      emitter.isClient = true
       //'connection', stream, isServer
       emitter.emit('connection', stream || client, stream ? true : false)
     }
