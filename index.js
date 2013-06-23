@@ -12,25 +12,33 @@ function inject (net) {
     emitter.listen = 
       function listen (port) {
         //try and start a server on port.
+        console.log('listening')
         emitter.isServer = true
         emitter.isClient = false
+
         server = net.createServer(onConnect).listen(port || _port)
         server.once('error', function (err) {
           //someone else has already started server.
           //connect to it.
           if('EADDRINUSE' == err.code) {
+              emitter.isServer = false
+              emitter.isClient = true
+
+
             function reconnect () {
               client.removeListener('error', reconnect)
               client.removeListener('close', reconnect)
               client.removeListener('end',   reconnect)
-              emitter.emit('connecting')
               setTimeout(listen, 50)
             }
+
             client = net.connect(port || _port)
               .once('connect', onConnect)
               .once('error',   reconnect)
               .once('end',     reconnect)
               .once('close',   reconnect)
+
+            emitter.emit('connecting')
           }
         })
         server.once('listening', function () {
@@ -42,12 +50,19 @@ function inject (net) {
       }
 
     function onConnect (stream) {
-      emitter.isServer = false
-      emitter.isClient = true
       //'connection', stream, isServer
       emitter.emit('connection', stream || client, stream ? true : false)
     }
     if(handler) emitter.on('connection', handler)
+
+    emitter.close = function () {
+      if(this.isServer)
+        server.close()
+      else {
+        client.end()
+        client.removeAllListeners()
+      }
+    }
     return emitter
   }
 
