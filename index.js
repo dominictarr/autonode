@@ -12,7 +12,6 @@ function inject (net) {
     emitter.listen = 
       function listen (port) {
         //try and start a server on port.
-        console.log('listening')
         emitter.isServer = true
         emitter.isClient = false
 
