@@ -3,7 +3,7 @@
 Connect a cluster on a single machine.
 One node starts a server on a given port,
 but if the address is in use, become a client, 
-and connect to that port connect to that port instead.
+and connect to that port instead.
 
 Also, if the current server goes down, 
 another node will become the server.
